@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roomly — переговорные</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f6fb;
+      color: #202536;
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      color: #3459d6;
+    }
+
+    .subtitle {
+      color: #626b80;
+      margin-bottom: 32px;
+    }
+
+    form, .room {
+      padding: 24px;
+      margin-bottom: 16px;
+      border: 1px solid #e0e5ef;
+      border-radius: 14px;
+      background: white;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid #cdd3df;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    input:focus {
+      outline: 2px solid #3459d6;
+      outline-offset: 2px;
+    }
+
+    button {
+      margin: 4px 8px 4px 0;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #3459d6;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    .secondary {
+      background: #e9edf7;
+      color: #29334d;
+    }
+
+    .delete {
+      background: #fde8eb;
+      color: #b1263b;
+    }
+
+    .room h3 {
+      margin-top: 0;
+    }
+
+    .room p {
+      color: #626b80;
+    }
+
+    #message {
+      min-height: 24px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Roomly</h1>
+    <p class="subtitle">Управление переговорными комнатами</p>
+
+    <h2 id="form-title">Добавить комнату</h2>
+
+    <form id="room-form">
+      <label>
+        Название
+        <input
+          id="name"
+          placeholder="Например, Альфа"
+          maxlength="100"
+          required
+        >
+      </label>
+
+      <label>
+        Вместимость
+        <input
+          id="capacity"
+          type="number"
+          placeholder="Количество человек"
+          min="1"
+          max="2147483647"
+          step="1"
+          required
+        >
+      </label>
+
+      <label>
+        Расположение
+        <input
+          id="location"
+          placeholder="Например, второй этаж"
+          maxlength="200"
+          required
+        >
+      </label>
+
+      <button id="save-button" type="submit">Добавить</button>
+
+      <button
+        id="cancel-button"
+        class="secondary"
+        type="button"
+        hidden
+      >
+        Отменить
+      </button>
+    </form>
+
+    <p id="message" role="status"></p>
+
+    <h2>Переговорные комнаты</h2>
+    <button id="refresh-button" class="secondary" type="button">
+      Обновить список
+    </button>
+
+    <div id="rooms"></div>
+  </main>
+
+  <script>
+    const form = document.querySelector("#room-form");
+    const nameInput = document.querySelector("#name");
+    const capacityInput = document.querySelector("#capacity");
+    const locationInput = document.querySelector("#location");
+
+    const formTitle = document.querySelector("#form-title");
+    const saveButton = document.querySelector("#save-button");
+    const cancelButton = document.querySelector("#cancel-button");
+    const refreshButton = document.querySelector("#refresh-button");
+
+    const message = document.querySelector("#message");
+    const roomsContainer = document.querySelector("#rooms");
+
+    let editingId = null;
+    let busy = false;
+
+    // Отправляет HTTP-запрос и проверяет ответ сервера.
+    async function api(path, options = {}) {
+      const response = await fetch(path, options);
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text.trim() || `Ошибка HTTP ${response.status}`);
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
+    }
+
+    // Блокирует управление, пока выполняется операция.
+    function setBusy(value) {
+      busy = value;
+
+      document.querySelectorAll("button, input").forEach((element) => {
+        element.disabled = value;
+      });
+    }
+
+    function resetForm() {
+      editingId = null;
+      form.reset();
+      formTitle.textContent = "Добавить комнату";
+      saveButton.textContent = "Добавить";
+      cancelButton.hidden = true;
+    }
+
+    function startEditing(room) {
+      if (busy) return;
+
+      editingId = room.id;
+      nameInput.value = room.name;
+      capacityInput.value = room.capacity;
+      locationInput.value = room.location;
+
+      formTitle.textContent = "Редактировать комнату";
+      saveButton.textContent = "Сохранить";
+      cancelButton.hidden = false;
+      message.textContent = "";
+
+      nameInput.focus();
+    }
+
+    // Загружает комнаты из PostgreSQL через наш Go-бэкенд.
+    async function loadRooms() {
+      const rooms = await api("/api/rooms");
+      roomsContainer.replaceChildren();
+
+      if (rooms.length === 0) {
+        roomsContainer.textContent = "Комнат пока нет. Добавьте первую.";
+        return;
+      }
+
+      for (const room of rooms) {
+        const card = document.createElement("article");
+        card.className = "room";
+
+        const title = document.createElement("h3");
+        title.textContent = room.name;
+
+        const details = document.createElement("p");
+        details.textContent =
+          `Вместимость: ${room.capacity} чел. · ${room.location}`;
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.textContent = "Редактировать";
+        editButton.disabled = busy;
+        editButton.addEventListener("click", () => startEditing(room));
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.textContent = "Удалить";
+        deleteButton.className = "delete";
+        deleteButton.disabled = busy;
+        deleteButton.addEventListener("click", () => deleteRoom(room));
+
+        card.append(title, details, editButton, deleteButton);
+        roomsContainer.append(card);
+      }
+    }
+
+    async function refreshRooms() {
+      try {
+        await loadRooms();
+      } catch (error) {
+        message.textContent =
+          `Не удалось загрузить список: ${error.message}`;
+      }
+    }
+
+    async function deleteRoom(room) {
+      if (busy) return;
+
+      if (!confirm(`Удалить комнату «${room.name}»?`)) {
+        return;
+      }
+
+      setBusy(true);
+      message.textContent = "";
+
+      try {
+        await api(`/api/rooms/${room.id}`, {
+          method: "DELETE"
+        });
+
+        if (editingId === room.id) {
+          resetForm();
+        }
+
+        message.textContent = "Комната удалена.";
+        await refreshRooms();
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      // Не даём браузеру перезагрузить страницу.
+      event.preventDefault();
+
+      if (busy) return;
+
+      const room = {
+        name: nameInput.value.trim(),
+        capacity: Number(capacityInput.value),
+        location: locationInput.value.trim()
+      };
+
+      if (!room.name || !room.location) {
+        message.textContent =
+          "Название и расположение не могут быть пустыми.";
+        return;
+      }
+
+      const isEditing = editingId !== null;
+      const path = isEditing
+        ? `/api/rooms/${editingId}`
+        : "/api/rooms";
+
+      setBusy(true);
+      message.textContent = "";
+
+      try {
+        await api(path, {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(room)
+        });
+
+        resetForm();
+
+        message.textContent = isEditing
+          ? "Изменения сохранены."
+          : "Комната добавлена.";
+
+        await refreshRooms();
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    cancelButton.addEventListener("click", resetForm);
+
+    refreshButton.addEventListener("click", async () => {
+      if (busy) return;
+
+      setBusy(true);
+      message.textContent = "";
+
+      try {
+        await refreshRooms();
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    // Загружаем список при открытии страницы.
+    refreshButton.click();
+  </script>
+</body>
+</html>

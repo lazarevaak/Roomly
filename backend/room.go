@@ -3,15 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
-	"time"
-	"errors"
-	"io"
-	"strings"
-	"unicode/utf8"
 	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -65,36 +63,26 @@ func roomsHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-		if err := json.NewEncoder(w).Encode(rooms); err != nil {
-			log.Printf("Ошибка отправки ответа: %v", err)
-		}
+		writeJSON(w, http.StatusOK, rooms)
 	}
 }
 
 func createRoomHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := currentUser(r)
+		if !ok || !isAdmin(user) {
+			http.Error(w, "Управлять комнатами может только администратор", http.StatusForbidden)
+			return
+		}
+
 		var input struct {
 			Name     string `json:"name"`
 			Capacity int    `json:"capacity"`
 			Location string `json:"location"`
 		}
 
-		// Ограничиваем размер тела запроса до 16 КБ.
-		r.Body = http.MaxBytesReader(w, r.Body, 16*1024)
-
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-
-		if err := decoder.Decode(&input); err != nil {
-			http.Error(w, "Некорректный JSON", http.StatusBadRequest)
-			return
-		}
-
-		// После первого объекта больше ничего не должно быть.
-		if err := decoder.Decode(new(any)); err != io.EOF {
-			http.Error(w, "Ожидается один JSON-объект", http.StatusBadRequest)
+		if err := decodeJSON(w, r, &input); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -149,17 +137,18 @@ func createRoomHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusCreated)
-
-		if err := json.NewEncoder(w).Encode(room); err != nil {
-			log.Printf("Ошибка отправки ответа: %v", err)
-		}
+		writeJSON(w, http.StatusCreated, room)
 	}
 }
 
 func deleteRoomHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := currentUser(r)
+		if !ok || !isAdmin(user) {
+			http.Error(w, "Управлять комнатами может только администратор", http.StatusForbidden)
+			return
+		}
+
 		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 		if err != nil || id <= 0 {
 			http.Error(w, "Некорректный ID комнаты", http.StatusBadRequest)
@@ -198,6 +187,12 @@ func deleteRoomHandler(db *sql.DB) http.HandlerFunc {
 
 func updateRoomHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := currentUser(r)
+		if !ok || !isAdmin(user) {
+			http.Error(w, "Управлять комнатами может только администратор", http.StatusForbidden)
+			return
+		}
+
 		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 		if err != nil || id <= 0 {
 			http.Error(w, "Некорректный ID комнаты", http.StatusBadRequest)
@@ -210,17 +205,8 @@ func updateRoomHandler(db *sql.DB) http.HandlerFunc {
 			Location string `json:"location"`
 		}
 
-		r.Body = http.MaxBytesReader(w, r.Body, 16*1024)
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-
-		if err := decoder.Decode(&input); err != nil {
-			http.Error(w, "Некорректный JSON", http.StatusBadRequest)
-			return
-		}
-
-		if err := decoder.Decode(new(any)); err != io.EOF {
-			http.Error(w, "Ожидается один JSON-объект", http.StatusBadRequest)
+		if err := decodeJSON(w, r, &input); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -276,9 +262,6 @@ func updateRoomHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		if err := json.NewEncoder(w).Encode(room); err != nil {
-			log.Printf("Ошибка отправки ответа: %v", err)
-		}
+		writeJSON(w, http.StatusOK, room)
 	}
 }

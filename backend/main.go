@@ -59,19 +59,17 @@ func run() error {
 
 	log.Println("Подключение к PostgreSQL установлено")
 
-	mux := http.NewServeMux()
+	if len(os.Args) > 1 {
+		if len(os.Args) == 2 && os.Args[1] == "migrate" {
+			return migrate(db)
+		}
 
-	mux.HandleFunc("GET /healthz", healthHandler)
-	mux.HandleFunc("GET /api/rooms", roomsHandler(db))
-	mux.HandleFunc("POST /api/rooms", createRoomHandler(db))
-	mux.HandleFunc("PUT /api/rooms/{id}", updateRoomHandler(db))
-	mux.HandleFunc("DELETE /api/rooms/{id}", deleteRoomHandler(db))
-
-	mux.Handle("GET /", http.FileServer(http.Dir("./web")))
+		return fmt.Errorf("неизвестные аргументы: используйте migrate или запуск без аргументов")
+	}
 
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           newRouter(db),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -118,9 +116,4 @@ func run() error {
 
 	log.Println("Сервер остановлен")
 	return nil
-}
-
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprintln(w, "Сервер работает!")
 }

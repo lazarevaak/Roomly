@@ -15,5 +15,17 @@ services:
       timeout: 3s
       retries: 10
 
+  app:
+    build: .
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
+      PORT: "8080"
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    stop_grace_period: 15s
+
 volumes:
   postgres_data:

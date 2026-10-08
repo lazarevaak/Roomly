@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rooms-app
+  namespace: meeting-rooms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rooms-app
+  template:
+    metadata:
+      labels:
+        app: rooms-app
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: app
+          image: meeting-rooms:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rooms-secret
+                  key: DATABASE_URL
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: rooms-config
+                  key: PORT
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rooms-app
+  namespace: meeting-rooms
+spec:
+  type: ClusterIP
+  selector:
+    app: rooms-app
+  ports:
+    - port: 8080
+      targetPort: 8080

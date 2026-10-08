@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rooms-config
+  namespace: meeting-rooms
+data:
+  POSTGRES_USER: meeting_user
+  POSTGRES_DB: meeting_rooms
+  PORT: "8080"

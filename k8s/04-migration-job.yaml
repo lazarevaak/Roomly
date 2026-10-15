@@ -11,7 +11,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: migrate
-          image: meeting-rooms:v1
+          image: meeting-rooms:v2
           imagePullPolicy: Never
           args:
             - migrate

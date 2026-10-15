@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,11 +17,11 @@ import (
 )
 
 func main() {
-	// Логи идут в стандартный вывод.
-	log.SetOutput(os.Stdout)
+	setupLogging()
 
 	if err := run(); err != nil {
-		log.Fatal(err)
+		slog.Error("Ошибка работы приложения", "error", err.Error())
+		os.Exit(1)
 	}
 }
 

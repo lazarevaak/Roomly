@@ -16,7 +16,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: app
-          image: meeting-rooms:v1
+          image: meeting-rooms:v2
           imagePullPolicy: Never
           ports:
             - containerPort: 8080

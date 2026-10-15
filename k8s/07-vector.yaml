@@ -124,6 +124,9 @@ spec:
             - name: logs
               mountPath: /var/log
               readOnly: true
+            - name: docker-containers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
             - name: data
               mountPath: /var/lib/vector
       volumes:
@@ -133,6 +136,10 @@ spec:
         - name: logs
           hostPath:
             path: /var/log
+            type: Directory
+        - name: docker-containers
+          hostPath:
+            path: /var/lib/docker/containers
             type: Directory
         - name: data
           hostPath:

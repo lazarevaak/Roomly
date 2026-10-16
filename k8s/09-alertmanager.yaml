@@ -7,7 +7,7 @@ data:
   alertmanager.yaml: |
     route:
       receiver: local-ui
-      group_by: [alertname, service.name]
+      group_by: [alertname, service_name]
       group_wait: 5s
       group_interval: 15s
       repeat_interval: 1h

@@ -1,2 +1,0 @@
-{"timestamp":"2026-10-15T22:56:52.214337841Z","level":"INFO","message":"Подключение к PostgreSQL установлено","service.name":"meeting-rooms"}
-{"timestamp":"2026-10-15T22:56:52.214808299Z","level":"INFO","message":"Сервер запускается на порту 8080","service.name":"meeting-rooms"}

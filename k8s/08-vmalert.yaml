@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmalert-rules
+  namespace: meeting-rooms
+data:
+  alerts.yaml: |
+    groups:
+      - name: meeting-rooms-logs
+        type: vlogs
+        interval: 15s
+        rules:
+          - alert: MeetingRoomsErrorLogs
+            expr: '_time:5m service.name:meeting-rooms level:ERROR | stats by (service.name, level) count() as logs | filter logs:>0'
+            for: 30s
+            labels:
+              severity: warning
+            annotations:
+              summary: "В логах meeting-rooms обнаружены ошибки"
+              description: 'За последние 5 минут найдено ERROR-событий: {{ $value }}.'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmalert
+  namespace: meeting-rooms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vmalert
+  template:
+    metadata:
+      labels:
+        app: vmalert
+    spec:
+      containers:
+        - name: vmalert
+          image: victoriametrics/vmalert:v1.136.0
+          args:
+            - "-rule=/etc/vmalert/alerts.yaml"
+            - "-rule.defaultRuleType=vlogs"
+            - "-rule.evalDelay=2s"
+            - "-datasource.url=http://victoria-logs.meeting-rooms.svc.cluster.local:9428"
+            - "-notifier.url=http://alertmanager.meeting-rooms.svc.cluster.local:9093"
+            - "-httpListenAddr=:8880"
+          ports:
+            - name: http
+              containerPort: 8880
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: rules
+              mountPath: /etc/vmalert
+              readOnly: true
+      volumes:
+        - name: rules
+          configMap:
+            name: vmalert-rules
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmalert
+  namespace: meeting-rooms
+spec:
+  selector:
+    app: vmalert
+  ports:
+    - name: http
+      port: 8880
+      targetPort: http

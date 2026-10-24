@@ -137,6 +137,7 @@ func createRoomHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		roomsCreatedTotal.Inc()
 		writeJSON(w, http.StatusCreated, room)
 	}
 }

@@ -130,6 +130,7 @@ func createBookingHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		bookingsCreatedTotal.Inc()
 		writeJSON(w, http.StatusCreated, booking)
 	}
 }
@@ -182,6 +183,7 @@ func updateBookingHandler(db *sql.DB) http.HandlerFunc {
 			db,
 			ctx,
 		)
+
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				http.Error(w, "Бронирование не найдено", http.StatusNotFound)
@@ -192,6 +194,7 @@ func updateBookingHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		bookingsUpdatedTotal.Inc()
 		writeJSON(w, http.StatusOK, booking)
 	}
 }
@@ -237,6 +240,7 @@ func deleteBookingHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		bookingsCancelledTotal.Inc()
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

@@ -69,12 +69,12 @@ func run() error {
 	}
 
 	server := &http.Server{
-		Addr: ":" + port,
-		Handler: newRouter(db),
+		Addr:              ":" + port,
+		Handler:           newRouter(db),
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout: 10 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout: 60 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	stopCtx, stop := signal.NotifyContext(

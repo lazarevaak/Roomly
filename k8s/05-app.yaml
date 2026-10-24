@@ -12,14 +12,21 @@ spec:
     metadata:
       labels:
         app: rooms-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
     spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: app
-          image: meeting-rooms:v2
+          image: meeting-rooms:v3
           imagePullPolicy: Never
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
           env:
             - name: DATABASE_URL
               valueFrom:

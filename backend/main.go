@@ -69,23 +69,31 @@ func run() error {
 	}
 
 	server := &http.Server{
-		Addr:              ":" + port,
-		Handler:           newRouter(db),
+		Addr: ":" + port,
+		Handler: newRouter(db),
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       10 * time.Second,
-		WriteTimeout:      15 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		ReadTimeout: 10 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout: 60 * time.Second,
 	}
 
-	// Ctrl+C отправляет SIGINT, Docker при остановке — SIGTERM.
 	stopCtx, stop := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
 		syscall.SIGTERM,
 	)
+
 	defer stop()
 
-	serverErrors := make(chan error, 1)
+	serverErrors := make(chan error, 2)
+
+	metricsServer := newMetricsServer()
+	defer metricsServer.Close()
+
+	go func() {
+		log.Println("Сервер метрик запускается на порту 9090")
+		serverErrors <- metricsServer.ListenAndServe()
+	}()
 
 	go func() {
 		log.Printf("Сервер запускается на порту %s", port)
@@ -103,7 +111,6 @@ func run() error {
 		log.Println("Завершение работы сервера...")
 	}
 
-	// Даём текущим запросам до 10 секунд на завершение.
 	shutdownCtx, shutdownCancel := context.WithTimeout(
 		context.Background(),
 		10*time.Second,
@@ -113,6 +120,10 @@ func run() error {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		_ = server.Close()
 		return fmt.Errorf("ошибка завершения сервера: %w", err)
+	}
+
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("ошибка завершения сервера метрик: %w", err)
 	}
 
 	log.Println("Сервер остановлен")

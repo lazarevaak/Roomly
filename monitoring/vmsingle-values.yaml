@@ -5,11 +5,13 @@ server:
     config:
       global:
         scrape_interval: 15s
+
       scrape_configs:
         - job_name: victoriametrics
           static_configs:
-            - targets: [ "localhost:8428" ]
-        - job_name: "kubernetes-apiservers"
+            - targets: ["localhost:8428"]
+
+        - job_name: kubernetes-apiservers
           kubernetes_sd_configs:
             - role: endpoints
           scheme: https
@@ -19,14 +21,13 @@ server:
           bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
           relabel_configs:
             - source_labels:
-                [
-                    __meta_kubernetes_namespace,
-                    __meta_kubernetes_service_name,
-                    __meta_kubernetes_endpoint_port_name,
-                ]
+                - __meta_kubernetes_namespace
+                - __meta_kubernetes_service_name
+                - __meta_kubernetes_endpoint_port_name
               action: keep
               regex: default;kubernetes;https
-        - job_name: "kubernetes-nodes"
+
+        - job_name: kubernetes-nodes
           scheme: https
           tls_config:
             ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -37,7 +38,8 @@ server:
           relabel_configs:
             - action: labelmap
               regex: __meta_kubernetes_node_label_(.+)
-        - job_name: "kubernetes-nodes-cadvisor"
+
+        - job_name: kubernetes-nodes-cadvisor
           scheme: https
           tls_config:
             ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -70,3 +72,47 @@ server:
               regex: '^/system\.slice/(.+)\.service$'
               target_label: systemd_service_name
               replacement: '${1}'
+
+        - job_name: meeting-rooms-pods
+          kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                  - meeting-rooms
+          relabel_configs:
+            - action: keep
+              source_labels:
+                - __meta_kubernetes_pod_annotation_prometheus_io_scrape
+              regex: "true"
+
+            - action: keep
+              source_labels:
+                - __meta_kubernetes_pod_phase
+              regex: Running
+
+            - action: drop
+              source_labels:
+                - __meta_kubernetes_pod_container_init
+              regex: "true"
+
+            - action: keep_if_equal
+              source_labels:
+                - __meta_kubernetes_pod_annotation_prometheus_io_port
+                - __meta_kubernetes_pod_container_port_number
+
+            - source_labels:
+                - __meta_kubernetes_pod_annotation_prometheus_io_path
+              regex: "(.+)"
+              target_label: __metrics_path__
+
+            - source_labels:
+                - __meta_kubernetes_namespace
+              target_label: namespace
+
+            - source_labels:
+                - __meta_kubernetes_pod_name
+              target_label: pod
+
+            - source_labels:
+                - __meta_kubernetes_pod_label_app
+              target_label: app

@@ -21,6 +21,8 @@ func observeOperation(
 ) http.HandlerFunc {
 	counter := operationAttempts.WithLabelValues(operation)
 
+	next = withDemoFailures(next)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		recorder := &statusWriter{
 			ResponseWriter: w,

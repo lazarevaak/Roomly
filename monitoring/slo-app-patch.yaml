@@ -1,0 +1,17 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: meeting-rooms:slo-v1
+          env:
+            - name: SLO_DEMO_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: slo-demo
+              mountPath: /etc/slo-demo
+              readOnly: true
+      volumes:
+        - name: slo-demo
+          configMap:
+            name: slo-demo

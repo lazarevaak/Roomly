@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rooms-prober
+  namespace: meeting-rooms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rooms-prober
+  template:
+    metadata:
+      labels:
+        app: rooms-prober
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9115"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: prober
+          image: python:3.12-alpine
+          command: ["python", "-u", "/scripts/prober.py"]
+          ports:
+            - name: metrics
+              containerPort: 9115
+          env:
+            - name: APP_URL
+              value: "http://rooms-app:8080"
+            - name: PROBE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: slo-prober-auth
+                  key: username
+            - name: PROBE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: slo-prober-auth
+                  key: password
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+      volumes:
+        - name: script
+          configMap:
+            name: slo-prober-code

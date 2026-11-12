@@ -6,13 +6,25 @@ metadata:
 data:
   alertmanager.yaml: |
     route:
-      receiver: local-ui
-      group_by: [alertname, service_name]
+      receiver: telegram
+      group_by: [alertname, service]
       group_wait: 5s
       group_interval: 15s
       repeat_interval: 1h
     receivers:
-      - name: local-ui
+      - name: telegram
+        telegram_configs:
+          - bot_token_file: /etc/alertmanager-secrets/bot-token
+            chat_id: 1415300064
+            send_resolved: true
+            parse_mode: ""
+            message: |
+              Статус: {{ .Status }}
+              {{ range .Alerts }}
+              Алерт: {{ .Labels.alertname }}
+              {{ .Annotations.summary }}
+              {{ .Annotations.description }}
+              {{ end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -54,12 +66,18 @@ spec:
             - name: config
               mountPath: /etc/alertmanager
               readOnly: true
+            - name: telegram
+              mountPath: /etc/alertmanager-secrets
+              readOnly: true
             - name: data
               mountPath: /alertmanager
       volumes:
         - name: config
           configMap:
             name: alertmanager-config
+        - name: telegram
+          secret:
+            secretName: alertmanager-telegram
         - name: data
           emptyDir: {}
 ---

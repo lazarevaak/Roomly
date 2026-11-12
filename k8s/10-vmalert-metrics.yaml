@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmalert-metric-rules
+  namespace: meeting-rooms
+data:
+  alerts.yaml: |
+    groups:
+      - name: meeting-rooms-service
+        type: prometheus
+        interval: 15s
+        rules:
+          - alert: RoomCreationErrors
+            expr: |
+              (
+                1 -
+                sum(increase(rooms_created_total{app="rooms-app"}[5m]))
+                /
+                sum(increase(business_operation_attempts_total{app="rooms-app",operation="room_create"}[5m]))
+              ) > 0.10
+              and
+              sum(increase(business_operation_attempts_total{app="rooms-app",operation="room_create"}[5m])) >= 10
+            for: 1m
+            labels:
+              severity: warning
+              service: meeting-rooms
+            annotations:
+              summary: "Ошибки создания комнат"
+              description: "Доля ошибок выше 10% за 5 минут при минимум 10 попытках."
+
+          - alert: BookingCreationErrors
+            expr: |
+              (
+                1 -
+                sum(increase(bookings_created_total{app="rooms-app"}[5m]))
+                /
+                sum(increase(business_operation_attempts_total{app="rooms-app",operation="booking_create"}[5m]))
+              ) > 0.10
+              and
+              sum(increase(business_operation_attempts_total{app="rooms-app",operation="booking_create"}[5m])) >= 10
+            for: 1m
+            labels:
+              severity: warning
+              service: meeting-rooms
+            annotations:
+              summary: "Ошибки создания бронирований"
+              description: "Доля ошибок выше 10% за 5 минут при минимум 10 попытках."
+
+      - name: meeting-rooms-runtime
+        type: prometheus
+        interval: 15s
+        rules:
+          - alert: GoTooManyGoroutines
+            expr: go_goroutines{app="rooms-app"} > 100
+            for: 2m
+            labels:
+              severity: warning
+              service: meeting-rooms
+            annotations:
+              summary: "Слишком много горутин Go"
+              description: 'Pod {{ $labels.pod }}: {{ $value }} горутин. Порог — 100.'
+
+          - alert: GoHeapMemoryHigh
+            expr: go_memstats_alloc_bytes{app="rooms-app"} > 100 * 1024 * 1024
+            for: 2m
+            labels:
+              severity: warning
+              service: meeting-rooms
+            annotations:
+              summary: "Высокое потребление памяти кучи Go"
+              description: 'Pod {{ $labels.pod }}: {{ $value }} байт. Порог — 100 МиБ.'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmalert-metrics
+  namespace: meeting-rooms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vmalert-metrics
+  template:
+    metadata:
+      labels:
+        app: vmalert-metrics
+    spec:
+      containers:
+        - name: vmalert
+          image: victoriametrics/vmalert:v1.136.0
+          args:
+            - "-rule=/etc/vmalert/alerts.yaml"
+            - "-rule.defaultRuleType=prometheus"
+            - "-datasource.url=http://vm-single-victoria-metrics-single-server.monitoring.svc.cluster.local:8428"
+            - "-notifier.url=http://alertmanager.meeting-rooms.svc.cluster.local:9093"
+            - "-httpListenAddr=:8880"
+          ports:
+            - name: http
+              containerPort: 8880
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: rules
+              mountPath: /etc/vmalert
+              readOnly: true
+      volumes:
+        - name: rules
+          configMap:
+            name: vmalert-metric-rules
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmalert-metrics
+  namespace: meeting-rooms
+spec:
+  selector:
+    app: vmalert-metrics
+  ports:
+    - name: http
+      port: 8880
+      targetPort: http

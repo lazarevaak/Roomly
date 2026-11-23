@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rooms-migrate
+  namespace: rooms-strategies
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migrate
+        image: meeting-rooms:deploy-v1
+        imagePullPolicy: Never
+        args:
+        - migrate
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database
+              key: url

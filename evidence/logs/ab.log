@@ -1,0 +1,93 @@
+2026-11-23T01:20:34.256+00:00 BEGIN ab real minikube / Envoy Gateway at http://127.0.0.1:8888
+2026-11-23T01:20:34.256+00:00 $ kubectl -n rooms-strategies set image deployment/rooms-stable app=meeting-rooms:deploy-v1
+2026-11-23T01:20:34.314+00:00 
+2026-11-23T01:20:34.314+00:00 $ kubectl -n rooms-strategies rollout status deployment/rooms-stable --timeout=180s
+2026-11-23T01:20:34.379+00:00 deployment "rooms-stable" successfully rolled out
+2026-11-23T01:20:34.379+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/ab.yaml
+2026-11-23T01:20:34.582+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:20:37.646+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:20:37.719+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-green","port":8080,"weight":1}],"matches":[{"headers":[{"name":"X-Audience","type":"Exact","value":"beta"}]}]},{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":1}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 21
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466022"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-green
+      port: 8080
+      weight: 1
+    matches:
+    - headers:
+      - name: X-Audience
+        type: Exact
+        value: beta
+      path:
+        type: PathPrefix
+        value: /
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:20:34Z"
+      message: Route is accepted
+      observedGeneration: 21
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:20:34Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 21
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:20:38.343+00:00 audience default: requests=100, versions={'v1': 100}, pods={'rooms-stable-7dd5df45fc-gp97v': 52, 'rooms-stable-7dd5df45fc-2jwr2': 48}
+2026-11-23T01:20:38.949+00:00 audience beta: requests=100, versions={'v2': 100}, pods={'rooms-green-55f8c6c49d-pdnnf': 46, 'rooms-green-55f8c6c49d-mrzhg': 54}
+2026-11-23T01:20:39.576+00:00 audience other: requests=100, versions={'v1': 100}, pods={'rooms-stable-7dd5df45fc-2jwr2': 61, 'rooms-stable-7dd5df45fc-gp97v': 39}
+2026-11-23T01:20:39.576+00:00 PASS A/B: only X-Audience: beta receives v2
+2026-11-23T01:20:39.576+00:00 $ kubectl -n rooms-strategies get deploy,pods,svc
+2026-11-23T01:20:39.646+00:00 NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/postgres       1/1     1            1           125m
+deployment.apps/rooms-green    2/2     2            2           123m
+deployment.apps/rooms-stable   2/2     2            2           123m
+
+NAME                                READY   STATUS      RESTARTS      AGE
+pod/postgres-65845c8f9b-p9zwb       1/1     Running     1 (39m ago)   125m
+pod/rooms-green-55f8c6c49d-mrzhg    1/1     Running     2 (38m ago)   123m
+pod/rooms-green-55f8c6c49d-pdnnf    1/1     Running     2 (38m ago)   123m
+pod/rooms-migrate-pghlx             0/1     Completed   0             125m
+pod/rooms-stable-7dd5df45fc-2jwr2   1/1     Running     0             7m27s
+pod/rooms-stable-7dd5df45fc-gp97v   1/1     Running     0             7m17s
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/postgres       ClusterIP   10.104.212.76    <none>        5432/TCP   125m
+service/rooms-green    ClusterIP   10.104.66.81     <none>        8080/TCP   123m
+service/rooms-stable   ClusterIP   10.106.174.171   <none>        8080/TCP   123m
+2026-11-23T01:20:39.646+00:00 END ab: PASS

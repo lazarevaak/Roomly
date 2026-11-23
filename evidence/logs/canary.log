@@ -1,0 +1,196 @@
+2026-11-23T01:27:35.743+00:00 BEGIN canary real minikube / Envoy Gateway at http://127.0.0.1:8888
+2026-11-23T01:27:35.743+00:00 $ kubectl -n rooms-strategies set image deployment/rooms-stable app=meeting-rooms:deploy-v1
+2026-11-23T01:27:35.803+00:00 
+2026-11-23T01:27:35.803+00:00 $ kubectl -n rooms-strategies rollout status deployment/rooms-stable --timeout=180s
+2026-11-23T01:27:35.864+00:00 deployment "rooms-stable" successfully rolled out
+2026-11-23T01:27:35.865+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/canary-90-10.yaml
+2026-11-23T01:27:36.038+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:27:39.093+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:27:39.157+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":90},{"name":"rooms-green","port":8080,"weight":10}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 29
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466807"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 90
+    - group: ""
+      kind: Service
+      name: rooms-green
+      port: 8080
+      weight: 10
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:27:36Z"
+      message: Route is accepted
+      observedGeneration: 29
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:27:36Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 29
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:27:44.807+00:00 canary 90/10: requests=1000, versions={'v1': 900, 'v2': 100}, pods={'rooms-stable-7dd5df45fc-qrc9d': 445, 'rooms-stable-7dd5df45fc-p22ws': 455, 'rooms-green-55f8c6c49d-pdnnf': 48, 'rooms-green-55f8c6c49d-mrzhg': 52}
+2026-11-23T01:27:44.807+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/canary-50-50.yaml
+2026-11-23T01:27:44.971+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:27:48.031+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:27:48.104+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":50},{"name":"rooms-green","port":8080,"weight":50}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 30
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466821"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 50
+    - group: ""
+      kind: Service
+      name: rooms-green
+      port: 8080
+      weight: 50
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:27:44Z"
+      message: Route is accepted
+      observedGeneration: 30
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:27:44Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 30
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:27:54.145+00:00 canary 50/50: requests=1000, versions={'v2': 500, 'v1': 500}, pods={'rooms-green-55f8c6c49d-mrzhg': 245, 'rooms-green-55f8c6c49d-pdnnf': 255, 'rooms-stable-7dd5df45fc-qrc9d': 245, 'rooms-stable-7dd5df45fc-p22ws': 255}
+2026-11-23T01:27:54.145+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/canary-0-100.yaml
+2026-11-23T01:27:54.313+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:27:57.373+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:27:57.433+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":0},{"name":"rooms-green","port":8080,"weight":100}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 31
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466837"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 0
+    - group: ""
+      kind: Service
+      name: rooms-green
+      port: 8080
+      weight: 100
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:27:54Z"
+      message: Route is accepted
+      observedGeneration: 31
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:27:54Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 31
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:28:03.474+00:00 canary 0/100: requests=1000, versions={'v2': 1000}, pods={'rooms-green-55f8c6c49d-pdnnf': 483, 'rooms-green-55f8c6c49d-mrzhg': 517}
+2026-11-23T01:28:03.475+00:00 PASS canary: all three ramps within 8 percentage points of target
+2026-11-23T01:28:03.475+00:00 $ kubectl -n rooms-strategies get deploy,pods,svc
+2026-11-23T01:28:03.541+00:00 NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/postgres       1/1     1            1           133m
+deployment.apps/rooms-green    2/2     2            2           130m
+deployment.apps/rooms-stable   2/2     2            2           130m
+
+NAME                                READY   STATUS      RESTARTS      AGE
+pod/postgres-65845c8f9b-p9zwb       1/1     Running     1 (46m ago)   133m
+pod/rooms-green-55f8c6c49d-mrzhg    1/1     Running     2 (45m ago)   130m
+pod/rooms-green-55f8c6c49d-pdnnf    1/1     Running     2 (45m ago)   130m
+pod/rooms-migrate-pghlx             0/1     Completed   0             132m
+pod/rooms-stable-7dd5df45fc-p22ws   1/1     Running     0             93s
+pod/rooms-stable-7dd5df45fc-qrc9d   1/1     Running     0             103s
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/postgres       ClusterIP   10.104.212.76    <none>        5432/TCP   133m
+service/rooms-green    ClusterIP   10.104.66.81     <none>        8080/TCP   130m
+service/rooms-stable   ClusterIP   10.106.174.171   <none>        8080/TCP   130m
+2026-11-23T01:28:03.541+00:00 END canary: PASS

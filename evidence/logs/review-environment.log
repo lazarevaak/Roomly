@@ -1,0 +1,109 @@
+Mon Nov 23 01:35:27 UTC 2026
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+minikube
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/postgres       1/1     1            1           140m
+deployment.apps/rooms-green    2/2     2            2           138m
+deployment.apps/rooms-stable   2/2     2            2           138m
+
+NAME                                READY   STATUS      RESTARTS      AGE
+pod/postgres-65845c8f9b-p9zwb       1/1     Running     1 (53m ago)   140m
+pod/rooms-green-55f8c6c49d-mrzhg    1/1     Running     2 (53m ago)   138m
+pod/rooms-green-55f8c6c49d-pdnnf    1/1     Running     2 (53m ago)   138m
+pod/rooms-migrate-pghlx             0/1     Completed   0             140m
+pod/rooms-stable-7dd5df45fc-p22ws   1/1     Running     0             8m58s
+pod/rooms-stable-7dd5df45fc-qrc9d   1/1     Running     0             9m8s
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/postgres       ClusterIP   10.104.212.76    <none>        5432/TCP   140m
+service/rooms-green    ClusterIP   10.104.66.81     <none>        8080/TCP   138m
+service/rooms-stable   ClusterIP   10.106.174.171   <none>        8080/TCP   138m
+
+NAME                                      CLASS      ADDRESS        PROGRAMMED   AGE
+gateway.gateway.networking.k8s.io/rooms   rooms-eg   10.98.11.184   True         138m
+
+NAME                                        HOSTNAMES   AGE
+httproute.gateway.networking.k8s.io/rooms               138m
+
+NAME                                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/postgres-data   Bound    pvc-082f9c11-4106-4ea8-90e0-7be617271ce5   1Gi        RWO            standard       <unset>                 140m
+NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS               IMAGES                                                                                                                                                       SELECTOR
+envoy-gateway                           1/1     1            1           143m   envoy-gateway            docker.io/envoyproxy/gateway:v1.10.0                                                                                                                         app.kubernetes.io/instance=eg,app.kubernetes.io/name=gateway-helm,control-plane=envoy-gateway
+envoy-rooms-strategies-rooms-0f5d8690   1/1     1            1           138m   envoy,shutdown-manager   docker.io/envoyproxy/envoy:distroless-v1.40.2@sha256:09ca6f2140a61ad8df11779a4a30d52b48433d444466328494f9188c9c35eded,docker.io/envoyproxy/gateway:v1.10.0   app.kubernetes.io/component=proxy,app.kubernetes.io/managed-by=envoy-gateway,app.kubernetes.io/name=envoy,gateway.envoyproxy.io/owning-gateway-name=rooms,gateway.envoyproxy.io/owning-gateway-namespace=rooms-strategies
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"GatewayClass","metadata":{"annotations":{},"name":"rooms-eg"},"spec":{"controllerName":"gateway.envoyproxy.io/gatewayclass-controller"}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  finalizers:
+  - gateway-exists-finalizer.gateway.networking.k8s.io
+  generation: 1
+  name: rooms-eg
+  resourceVersion: "454444"
+  uid: 1ebe4c21-d867-42ae-b706-cf6c12179fda
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+status:
+  conditions:
+  - lastTransitionTime: "2026-11-22T23:17:24Z"
+    message: Valid GatewayClass
+    observedGeneration: 1
+    reason: Accepted
+    status: "True"
+    type: Accepted
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":1}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 32
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466852"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:28:03Z"
+      message: Route is accepted
+      observedGeneration: 32
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:28:03Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 32
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms

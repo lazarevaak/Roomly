@@ -4,7 +4,13 @@ metadata:
   name: rooms-app
   namespace: meeting-rooms
 spec:
-  replicas: 1
+  replicas: 2
+  minReadySeconds: 8
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: rooms-app
@@ -20,7 +26,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: app
-          image: meeting-rooms:v3
+          image: meeting-rooms:deploy-v1
           imagePullPolicy: Never
           ports:
             - name: http
@@ -40,7 +46,7 @@ spec:
                   key: PORT
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /readyz
               port: 8080
             initialDelaySeconds: 2
             periodSeconds: 5

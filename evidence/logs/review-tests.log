@@ -1,0 +1,10 @@
+=== RUN   TestDeploymentIdentityOnResponses
+2026/11/23 04:35:03 INFO http_request version=v2 pod=MacBook-Air.local method=GET path=/version request_id="" audience=""
+2026/11/23 04:35:03 INFO http_request version=v2 pod=MacBook-Air.local method=GET path=/api/me request_id="" audience=""
+--- PASS: TestDeploymentIdentityOnResponses (0.00s)
+=== RUN   TestReadinessFailsWhenDatabaseClosedButLivenessSurvives
+--- PASS: TestReadinessFailsWhenDatabaseClosedButLivenessSurvives (0.00s)
+=== RUN   TestRoutesDoNotConflict
+--- PASS: TestRoutesDoNotConflict (0.00s)
+PASS
+ok  	meeting-rooms/backend	0.713s

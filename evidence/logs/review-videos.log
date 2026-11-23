@@ -1,0 +1,37 @@
+/private/tmp/check-roomly-videos.swift:8:42: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead [#DeprecatedDeclaration]
+ 6 | for name in ["rolling", "blue-green", "canary", "ab"] {
+ 7 |     let asset = AVURLAsset(url: URL(fileURLWithPath: "\(root)/\(name).mov"))
+ 8 |     let seconds = CMTimeGetSeconds(asset.duration)
+   |                                          `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead [#DeprecatedDeclaration]
+ 9 |     let track = asset.tracks(withMediaType: .video).first
+10 |     print("\(name).mov duration=\(seconds)s size=\(String(describing: track?.naturalSize))")
+
+/private/tmp/check-roomly-videos.swift:9:23: warning: 'tracks(withMediaType:)' was deprecated in macOS 13.0: Use loadTracks(withMediaType:) instead [#DeprecatedDeclaration]
+ 7 |     let asset = AVURLAsset(url: URL(fileURLWithPath: "\(root)/\(name).mov"))
+ 8 |     let seconds = CMTimeGetSeconds(asset.duration)
+ 9 |     let track = asset.tracks(withMediaType: .video).first
+   |                       `- warning: 'tracks(withMediaType:)' was deprecated in macOS 13.0: Use loadTracks(withMediaType:) instead [#DeprecatedDeclaration]
+10 |     print("\(name).mov duration=\(seconds)s size=\(String(describing: track?.naturalSize))")
+11 |     let generator = AVAssetImageGenerator(asset: asset)
+
+/private/tmp/check-roomly-videos.swift:10:78: warning: 'naturalSize' was deprecated in macOS 13.0: Use load(.naturalSize) instead [#DeprecatedDeclaration]
+ 8 |     let seconds = CMTimeGetSeconds(asset.duration)
+ 9 |     let track = asset.tracks(withMediaType: .video).first
+10 |     print("\(name).mov duration=\(seconds)s size=\(String(describing: track?.naturalSize))")
+   |                                                                              `- warning: 'naturalSize' was deprecated in macOS 13.0: Use load(.naturalSize) instead [#DeprecatedDeclaration]
+11 |     let generator = AVAssetImageGenerator(asset: asset)
+12 |     generator.appliesPreferredTrackTransform = true
+
+/private/tmp/check-roomly-videos.swift:15:39: warning: 'copyCGImage(at:actualTime:)' was deprecated in macOS 15.0: Use generateCGImageAsynchronouslyForTime:completionHandler: instead [#DeprecatedDeclaration]
+13 |     for fraction in [0.25, 0.75] {
+14 |         do {
+15 |             let frame = try generator.copyCGImage(at: CMTime(seconds: seconds * fraction, preferredTimescale: 600), actualTime: nil)
+   |                                       `- warning: 'copyCGImage(at:actualTime:)' was deprecated in macOS 15.0: Use generateCGImageAsynchronouslyForTime:completionHandler: instead [#DeprecatedDeclaration]
+16 |             let bitmap = NSBitmapImageRep(cgImage: frame)
+17 |             try bitmap.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: "/private/tmp/roomly-\(name)-\(Int(fraction*100)).png"))
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+rolling.mov duration=149.21166666666667s size=Optional((1864.0, 1668.0))
+blue-green.mov duration=91.52833333333334s size=Optional((1864.0, 1668.0))
+canary.mov duration=61.4226875s size=Optional((1864.0, 1668.0))
+ab.mov duration=29.993333333333332s size=Optional((1864.0, 1668.0))

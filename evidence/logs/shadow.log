@@ -1,0 +1,157 @@
+2026-11-23T01:23:42.139+00:00 BEGIN shadow real minikube / Envoy Gateway at http://127.0.0.1:8888
+2026-11-23T01:23:42.140+00:00 $ kubectl -n rooms-strategies set image deployment/rooms-stable app=meeting-rooms:deploy-v1
+2026-11-23T01:23:42.197+00:00 
+2026-11-23T01:23:42.197+00:00 $ kubectl -n rooms-strategies rollout status deployment/rooms-stable --timeout=180s
+2026-11-23T01:23:42.263+00:00 deployment "rooms-stable" successfully rolled out
+2026-11-23T01:23:42.263+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/shadow.yaml
+2026-11-23T01:23:42.458+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:23:45.524+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:23:45.598+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":1}],"filters":[{"requestMirror":{"backendRef":{"name":"rooms-green","port":8080}},"type":"RequestMirror"}],"matches":[{"method":"GET","path":{"type":"Exact","value":"/version"}}]},{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":1}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 23
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466290"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 1
+    filters:
+    - requestMirror:
+        backendRef:
+          group: ""
+          kind: Service
+          name: rooms-green
+          port: 8080
+      type: RequestMirror
+    matches:
+    - method: GET
+      path:
+        type: Exact
+        value: /version
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:23:42Z"
+      message: Route is accepted
+      observedGeneration: 23
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:23:42Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 23
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:23:45.702+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-0 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.710+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-1 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.719+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-2 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.727+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-3 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.736+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-4 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.745+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-5 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.753+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-6 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.761+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-7 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.769+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-8 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.776+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-9 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.786+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-10 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.792+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-11 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.799+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-12 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.806+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-13 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.813+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-14 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.820+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-15 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.826+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-16 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.834+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-17 version=v1 pod=rooms-stable-7dd5df45fc-2jwr2
+2026-11-23T01:23:45.840+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-18 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:45.848+00:00 client correlation_id(X-Audience)=shadow-1795397025694713000-19 version=v1 pod=rooms-stable-7dd5df45fc-gp97v
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.700080834Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"3585df3a-30eb-4af4-af5d-fbf222ad02c0","audience":"shadow-1795397025694713000-0"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.70772725Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"0e2179dc-34c0-4c22-bf52-6eb3d1494771","audience":"shadow-1795397025694713000-1"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.716752042Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"3c18a96c-c014-4d70-a65f-a6767f92bed3","audience":"shadow-1795397025694713000-2"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.734290792Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"00597906-59cf-4e5f-8fe5-75b5622b3a80","audience":"shadow-1795397025694713000-4"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.743380917Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"c375c1cc-8dd3-483f-826b-c574e5c6b8de","audience":"shadow-1795397025694713000-5"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.759339292Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"9e4cfb67-a45f-43fd-95c5-6da4eefc0c66","audience":"shadow-1795397025694713000-7"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.774512876Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"9571f326-4f27-428a-a894-4b077a4c6c01","audience":"shadow-1795397025694713000-9"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-2jwr2/app] {"timestamp":"2026-11-23T01:23:45.832119459Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-2jwr2","method":"GET","path":"/version","request_id":"9e138815-3a66-493c-8b0c-3f208509d5d7","audience":"shadow-1795397025694713000-17"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.725062417Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"5ad6de04-7cee-4cae-9964-943cfd2a9461","audience":"shadow-1795397025694713000-3"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.751661334Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"3b614a50-cb37-4564-b96b-883ee55f2592","audience":"shadow-1795397025694713000-6"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.767486626Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"2485acc4-94c5-444d-a6f9-ad4922ec8f07","audience":"shadow-1795397025694713000-8"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.783783251Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"d010173f-100d-4f64-afe5-3a3d994a3368","audience":"shadow-1795397025694713000-10"}
+2026-11-23T01:23:48.967+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.790353167Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"6cd867dd-7a3f-44c2-a052-d54aac475d6d","audience":"shadow-1795397025694713000-11"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.797460834Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"27b294ab-34ff-4ee6-a2c8-a43ff2025c9b","audience":"shadow-1795397025694713000-12"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.804317834Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"2077cb77-cbc0-4139-a8d7-2983f3e229ec","audience":"shadow-1795397025694713000-13"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.811261792Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"5f516e35-5428-40d3-b0b0-f4f302a3e5ec","audience":"shadow-1795397025694713000-14"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.818608251Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"3602e137-5a92-4434-9792-f6f41028f1ad","audience":"shadow-1795397025694713000-15"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.824601792Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"fdf7e3d6-4b0a-4956-802f-c522b1964f59","audience":"shadow-1795397025694713000-16"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.838676751Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"3c0b9bdc-e223-4009-b021-ed6256f59301","audience":"shadow-1795397025694713000-18"}
+2026-11-23T01:23:48.968+00:00 [pod/rooms-stable-7dd5df45fc-gp97v/app] {"timestamp":"2026-11-23T01:23:45.846118209Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v1","pod":"rooms-stable-7dd5df45fc-gp97v","method":"GET","path":"/version","request_id":"ace024be-e19e-4e7c-b90a-109130f5700c","audience":"shadow-1795397025694713000-19"}
+2026-11-23T01:23:48.968+00:00 rooms-stable: correlated unique requests=20
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.725184251Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"5ad6de04-7cee-4cae-9964-943cfd2a9461","audience":"shadow-1795397025694713000-3"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.734309667Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"00597906-59cf-4e5f-8fe5-75b5622b3a80","audience":"shadow-1795397025694713000-4"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.774494959Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"9571f326-4f27-428a-a894-4b077a4c6c01","audience":"shadow-1795397025694713000-9"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.790389834Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"6cd867dd-7a3f-44c2-a052-d54aac475d6d","audience":"shadow-1795397025694713000-11"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.797455126Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"27b294ab-34ff-4ee6-a2c8-a43ff2025c9b","audience":"shadow-1795397025694713000-12"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.804337042Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"2077cb77-cbc0-4139-a8d7-2983f3e229ec","audience":"shadow-1795397025694713000-13"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-mrzhg/app] {"timestamp":"2026-11-23T01:23:45.838823709Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-mrzhg","method":"GET","path":"/version","request_id":"3c0b9bdc-e223-4009-b021-ed6256f59301","audience":"shadow-1795397025694713000-18"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.700222042Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"3585df3a-30eb-4af4-af5d-fbf222ad02c0","audience":"shadow-1795397025694713000-0"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.707724625Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"0e2179dc-34c0-4c22-bf52-6eb3d1494771","audience":"shadow-1795397025694713000-1"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.716831584Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"3c18a96c-c014-4d70-a65f-a6767f92bed3","audience":"shadow-1795397025694713000-2"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.743449084Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"c375c1cc-8dd3-483f-826b-c574e5c6b8de","audience":"shadow-1795397025694713000-5"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.751725042Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"3b614a50-cb37-4564-b96b-883ee55f2592","audience":"shadow-1795397025694713000-6"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.759375792Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"9e4cfb67-a45f-43fd-95c5-6da4eefc0c66","audience":"shadow-1795397025694713000-7"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.767506584Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"2485acc4-94c5-444d-a6f9-ad4922ec8f07","audience":"shadow-1795397025694713000-8"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.783799084Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"d010173f-100d-4f64-afe5-3a3d994a3368","audience":"shadow-1795397025694713000-10"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.811299292Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"5f516e35-5428-40d3-b0b0-f4f302a3e5ec","audience":"shadow-1795397025694713000-14"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.818654209Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"3602e137-5a92-4434-9792-f6f41028f1ad","audience":"shadow-1795397025694713000-15"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.824611834Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"fdf7e3d6-4b0a-4956-802f-c522b1964f59","audience":"shadow-1795397025694713000-16"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.832163334Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"9e138815-3a66-493c-8b0c-3f208509d5d7","audience":"shadow-1795397025694713000-17"}
+2026-11-23T01:23:49.056+00:00 [pod/rooms-green-55f8c6c49d-pdnnf/app] {"timestamp":"2026-11-23T01:23:45.846118459Z","level":"INFO","message":"http_request","service.name":"meeting-rooms","version":"v2","pod":"rooms-green-55f8c6c49d-pdnnf","method":"GET","path":"/version","request_id":"ace024be-e19e-4e7c-b90a-109130f5700c","audience":"shadow-1795397025694713000-19"}
+2026-11-23T01:23:49.057+00:00 rooms-green: correlated unique requests=20
+2026-11-23T01:23:49.057+00:00 PASS shadow: all 20 correlation IDs (X-Audience) in both backends; all client responses v1
+2026-11-23T01:23:49.057+00:00 $ kubectl -n rooms-strategies get deploy,pods,svc
+2026-11-23T01:23:49.123+00:00 NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/postgres       1/1     1            1           128m
+deployment.apps/rooms-green    2/2     2            2           126m
+deployment.apps/rooms-stable   2/2     2            2           126m
+
+NAME                                READY   STATUS      RESTARTS      AGE
+pod/postgres-65845c8f9b-p9zwb       1/1     Running     1 (42m ago)   128m
+pod/rooms-green-55f8c6c49d-mrzhg    1/1     Running     2 (41m ago)   126m
+pod/rooms-green-55f8c6c49d-pdnnf    1/1     Running     2 (41m ago)   126m
+pod/rooms-migrate-pghlx             0/1     Completed   0             128m
+pod/rooms-stable-7dd5df45fc-2jwr2   1/1     Running     0             10m
+pod/rooms-stable-7dd5df45fc-gp97v   1/1     Running     0             10m
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/postgres       ClusterIP   10.104.212.76    <none>        5432/TCP   128m
+service/rooms-green    ClusterIP   10.104.66.81     <none>        8080/TCP   126m
+service/rooms-stable   ClusterIP   10.106.174.171   <none>        8080/TCP   126m
+2026-11-23T01:23:49.123+00:00 END shadow: PASS

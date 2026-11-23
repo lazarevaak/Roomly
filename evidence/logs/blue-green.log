@@ -1,0 +1,181 @@
+2026-11-23T01:26:41.046+00:00 BEGIN blue-green real minikube / Envoy Gateway at http://127.0.0.1:8888
+2026-11-23T01:26:41.046+00:00 $ kubectl -n rooms-strategies set image deployment/rooms-stable app=meeting-rooms:deploy-v1
+2026-11-23T01:26:41.102+00:00 
+2026-11-23T01:26:41.102+00:00 $ kubectl -n rooms-strategies rollout status deployment/rooms-stable --timeout=180s
+2026-11-23T01:26:41.161+00:00 deployment "rooms-stable" successfully rolled out
+2026-11-23T01:26:41.161+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/stable.yaml
+2026-11-23T01:26:41.334+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:26:44.395+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:26:44.467+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":1}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 26
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466452"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:25:36Z"
+      message: Route is accepted
+      observedGeneration: 26
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:25:36Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 26
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:26:44.878+00:00 blue: requests=60, versions={'v1': 60}, pods={'rooms-stable-7dd5df45fc-p22ws': 28, 'rooms-stable-7dd5df45fc-qrc9d': 32}
+2026-11-23T01:26:44.878+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/green.yaml
+2026-11-23T01:26:45.054+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:26:48.123+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:26:48.192+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-green","port":8080,"weight":1}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 27
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466724"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-green
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:26:45Z"
+      message: Route is accepted
+      observedGeneration: 27
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:26:45Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 27
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:26:48.584+00:00 green switched: requests=60, versions={'v2': 60}, pods={'rooms-green-55f8c6c49d-mrzhg': 30, 'rooms-green-55f8c6c49d-pdnnf': 30}
+2026-11-23T01:26:48.584+00:00 $ kubectl -n rooms-strategies apply -f deploy/strategies/stable.yaml
+2026-11-23T01:26:48.755+00:00 httproute.gateway.networking.k8s.io/rooms configured
+2026-11-23T01:26:51.813+00:00 $ kubectl -n rooms-strategies get httproute rooms -o yaml
+2026-11-23T01:26:51.882+00:00 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"rooms","namespace":"rooms-strategies"},"spec":{"parentRefs":[{"name":"rooms"}],"rules":[{"backendRefs":[{"name":"rooms-stable","port":8080,"weight":1}]}]}}
+  creationTimestamp: "2026-11-22T23:17:24Z"
+  generation: 28
+  name: rooms
+  namespace: rooms-strategies
+  resourceVersion: "466738"
+  uid: 1b073710-63d8-4bcf-a59d-8d0871649eea
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: rooms
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: rooms-stable
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-11-23T01:26:48Z"
+      message: Route is accepted
+      observedGeneration: 28
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-23T01:26:48Z"
+      message: Resolved all the Object references for the Route
+      observedGeneration: 28
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: rooms
+2026-11-23T01:26:52.267+00:00 rollback blue: requests=60, versions={'v1': 60}, pods={'rooms-stable-7dd5df45fc-p22ws': 29, 'rooms-stable-7dd5df45fc-qrc9d': 31}
+2026-11-23T01:26:52.267+00:00 PASS blue/green: single route switch, both deployments remain ready, rollback verified
+2026-11-23T01:26:52.267+00:00 $ kubectl -n rooms-strategies get deploy,pods,svc
+2026-11-23T01:26:52.333+00:00 NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/postgres       1/1     1            1           132m
+deployment.apps/rooms-green    2/2     2            2           129m
+deployment.apps/rooms-stable   2/2     2            2           129m
+
+NAME                                READY   STATUS      RESTARTS      AGE
+pod/postgres-65845c8f9b-p9zwb       1/1     Running     1 (45m ago)   132m
+pod/rooms-green-55f8c6c49d-mrzhg    1/1     Running     2 (44m ago)   129m
+pod/rooms-green-55f8c6c49d-pdnnf    1/1     Running     2 (44m ago)   129m
+pod/rooms-migrate-pghlx             0/1     Completed   0             131m
+pod/rooms-stable-7dd5df45fc-p22ws   1/1     Running     0             22s
+pod/rooms-stable-7dd5df45fc-qrc9d   1/1     Running     0             32s
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/postgres       ClusterIP   10.104.212.76    <none>        5432/TCP   132m
+service/rooms-green    ClusterIP   10.104.66.81     <none>        8080/TCP   129m
+service/rooms-stable   ClusterIP   10.106.174.171   <none>        8080/TCP   129m
+2026-11-23T01:26:52.333+00:00 END blue-green: PASS

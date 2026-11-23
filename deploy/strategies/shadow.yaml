@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rooms
+  namespace: rooms-strategies
+spec:
+  parentRefs:
+  - name: rooms
+  rules:
+  - matches:
+    - path:
+        type: Exact
+        value: /version
+      method: GET
+    filters:
+    - type: RequestMirror
+      requestMirror:
+        backendRef:
+          name: rooms-green
+          port: 8080
+    backendRefs:
+    - name: rooms-stable
+      port: 8080
+      weight: 1
+  - backendRefs:
+    - name: rooms-stable
+      port: 8080
+      weight: 1

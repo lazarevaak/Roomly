@@ -3,3 +3,7 @@
 .DS_Store
 *.zip
 server
+evidence
+screenshots
+scripts/__pycache__
+scripts/deployment/__pycache__

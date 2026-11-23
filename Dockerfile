@@ -6,7 +6,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -o /out/server ./backend
+ARG APP_VERSION=dev
+RUN CGO_ENABLED=0 go build -trimpath -ldflags "-X main.buildVersion=${APP_VERSION}" -o /out/server ./backend
 
 FROM alpine:3.22
 

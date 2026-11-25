@@ -75,6 +75,7 @@ metadata:
   name: rooms-stable
   namespace: rooms-strategies
 spec:
+  type: ClusterIP
   selector:
     app: rooms-stable
   ports:
@@ -159,6 +160,7 @@ metadata:
   name: rooms-green
   namespace: rooms-strategies
 spec:
+  type: ClusterIP
   selector:
     app: rooms-green
   ports:

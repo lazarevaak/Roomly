@@ -1,0 +1,23 @@
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES                    SELECTOR
+deployment.apps/postgres       1/1     1            1           2d23h   postgres     postgres:17.11-alpine     app=postgres
+deployment.apps/rooms-green    2/2     2            2           2d23h   app          meeting-rooms:deploy-v2   app=rooms-green
+deployment.apps/rooms-stable   2/2     2            2           2d23h   app          meeting-rooms:deploy-v1   app=rooms-stable
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+service/postgres       ClusterIP   10.104.212.76    <none>        5432/TCP   2d23h   app=postgres
+service/rooms-green    ClusterIP   10.104.66.81     <none>        8080/TCP   2d23h   app=rooms-green
+service/rooms-stable   ClusterIP   10.106.174.171   <none>        8080/TCP   2d23h   app=rooms-stable
+
+NAME                                READY   STATUS      RESTARTS      AGE     IP             NODE       NOMINATED NODE   READINESS GATES
+pod/postgres-65845c8f9b-p9zwb       1/1     Running     2 (45m ago)   2d23h   10.244.0.160   minikube   <none>           <none>
+pod/rooms-green-55f8c6c49d-mrzhg    1/1     Running     5 (44m ago)   2d23h   10.244.0.162   minikube   <none>           <none>
+pod/rooms-green-55f8c6c49d-pdnnf    1/1     Running     5 (44m ago)   2d23h   10.244.0.150   minikube   <none>           <none>
+pod/rooms-migrate-pghlx             0/1     Completed   0             2d23h   <none>         minikube   <none>           <none>
+pod/rooms-stable-7dd5df45fc-p22ws   1/1     Running     3 (44m ago)   2d21h   10.244.0.158   minikube   <none>           <none>
+pod/rooms-stable-7dd5df45fc-qrc9d   1/1     Running     3 (44m ago)   2d21h   10.244.0.155   minikube   <none>           <none>
+
+NAME                                      CLASS      ADDRESS        PROGRAMMED   AGE
+gateway.gateway.networking.k8s.io/rooms   rooms-eg   10.98.11.184   True         2d23h
+
+NAME                                        HOSTNAMES   AGE
+httproute.gateway.networking.k8s.io/rooms               2d23h
